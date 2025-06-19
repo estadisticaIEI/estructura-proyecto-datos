@@ -1,18 +1,25 @@
-param(
-    [string]$ProjectName
-)
+# ========================
+# DATA PROJECT CREATOR SCRIPT (INTERACTIVE)
+# ========================
 
-# ================================================
-# CONFIGURA AQUÍ LA RUTA BASE DE TUS PROYECTOS
-# Reemplaza esta línea con la carpeta donde quieras guardar tus proyectos
-# Ejemplo: "C:\Users\TuNombre\Documents\ProyectosCienciaDatos"
-# ================================================
-$basePath = "C:\RUTA\A\TU\CARPETA\DE\PROYECTOS"
+# Ask user for the base path
+$basePath = Read-Host "📁 Enter the full path where the new project should be created (e.g. C:\Users\Andre\Documents\DataProjects)"
+if ($basePath -match '^(exit|cancel)$') {
+    Write-Host "`n❌ Script cancelled by user." -ForegroundColor Red
+    exit
+}
 
-# Ruta completa del nuevo proyecto
+# Ask user for the project name
+$ProjectName = Read-Host "📌 Enter the name of your new data project"
+if ($ProjectName -match '^(exit|cancel)$') {
+    Write-Host "`n❌ Script cancelled by user." -ForegroundColor Red
+    exit
+}
+
+# Combine into full project path
 $projectPath = Join-Path $basePath $ProjectName
 
-# 1. Crear carpetas necesarias
+# Create folder structure
 $folders = @(
     ".venv",
     "data\raw",
@@ -29,7 +36,7 @@ foreach ($folder in $folders) {
     New-Item -Path "$projectPath\$folder" -ItemType Directory -Force | Out-Null
 }
 
-# 2. Crear archivos vacíos clave
+# Create empty files
 $files = @(
     "requirements_devs.txt",
     "requirements_final.txt",
@@ -41,7 +48,7 @@ foreach ($file in $files) {
     New-Item -Path "$projectPath\$file" -ItemType File -Force | Out-Null
 }
 
-# 3. Inicializar repositorio Git y crear .gitignore
+# Initialize Git and create .gitignore
 Set-Location $projectPath
 git init | Out-Null
 
@@ -53,22 +60,18 @@ data/
 *.pbix
 "@ | Out-File -Encoding utf8 .gitignore
 
-# 4. Crear entorno virtual
+# Create and activate virtual environment
 python -m venv .venv
-
-# 5. Activar entorno virtual (solo en esta terminal)
 & "$projectPath\.venv\Scripts\Activate.ps1"
 
-# 6. Actualizar pip
+# Upgrade pip and install core packages
 python -m pip install --upgrade pip
-
-# 7. Instalar dependencias base
 pip install ipykernel jupyterlab notebook
 
-# 8. Registrar el kernel con nombre personalizado
+# Register Jupyter kernel
 python -m ipykernel install --user --name=".venv" --display-name="Python (.venv)"
 
-# 9. Crear archivo requirements_devs.txt e instalar dependencias
+# Write and install dependencies
 @"
 pandas>=2.2.3
 numpy>=1.26.4
@@ -83,7 +86,5 @@ xlsxwriter>=3.1.9
 
 pip install -r "$projectPath\requirements_devs.txt"
 
-# 10. Verificar instalación
-pip list
-
-Write-Host "`n✅ Proyecto '$ProjectName' creado y configurado correctamente." -ForegroundColor Green
+# Final message
+Write-Host "`n🎉 Project '$ProjectName' was successfully created at: $projectPath" -ForegroundColor Green
