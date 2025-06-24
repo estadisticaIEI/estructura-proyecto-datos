@@ -1,42 +1,81 @@
-# ========================
+# =========================
 # DATA PROJECT CREATOR SCRIPT (INTERACTIVE)
-# ========================
+# =========================
 
-# Ask user for the base path
-$basePath = Read-Host "📁 Enter the full path where the new project should be created (e.g. C:\Users\Andre\Documents\DataProjects)"
-if ($basePath -match '^(exit|cancel)$') {
-    Write-Host "`n❌ Script cancelled by user." -ForegroundColor Red
-    exit
+# Function: check if the given path is a critical or prohibited Windows folder
+function Is-ProhibitedPath ($path) {
+    $badRoots = @(
+        "C:\", "C:\Windows", "C:\Program Files", "C:\Program Files (x86)",
+        "C:\Users\Public", "C:\Users\Administrator"
+    )
+    foreach ($root in $badRoots) {
+        if ($path.ToLower().StartsWith($root.ToLower())) {
+            return $true
+        }
+    }
+    return $false
 }
 
-# Ask user for the project name
-$ProjectName = Read-Host "📌 Enter the name of your new data project"
-if ($ProjectName -match '^(exit|cancel)$') {
-    Write-Host "`n❌ Script cancelled by user." -ForegroundColor Red
+#region Prompt for base path
+do {
+    $basePath = Read-Host "📁 Enter the full path where the new project should be created (e.g. C:\Users\You\Documents\DataProjects)"
+    if ($basePath -match '^(exit|cancel)$') {
+        Write-Host "`n❌ Script cancelled by user." -ForegroundColor Red
+        exit
+    }
+} while (-not $basePath)
+
+if ($basePath -match '^\s*$') {
+    Write-Host "`n❌ Invalid empty path. Cancelling..." -ForegroundColor Red
     exit
 }
+if (Is-ProhibitedPath $basePath) {
+    Write-Host "`n❌ Prohibited or system-critical path. Cancelling..." -ForegroundColor Red
+    exit
+}
+if (-not (Test-Path -Path $basePath)) {
+    Write-Host "`n❌ Path does not exist. Cancelling..." -ForegroundColor Red
+    exit
+}
+#endregion
 
-# Combine into full project path
+#region Prompt for project name
+do {
+    $ProjectName = Read-Host "📌 Enter the name of your new data project (letters, numbers, '-', '_')"
+    if ($ProjectName -match '^(exit|cancel)$') {
+        Write-Host "`n❌ Script cancelled by user." -ForegroundColor Red
+        exit
+    }
+} while (-not $ProjectName)
+
+if ($ProjectName -match '^\s*$') {
+    Write-Host "`n❌ Invalid empty project name. Cancelling..." -ForegroundColor Red
+    exit
+}
+if ($ProjectName -notmatch '^[A-Za-z0-9\-_]+$') {
+    Write-Host "`n❌ Project name contains invalid characters. Canceling..." -ForegroundColor Red
+    exit
+}
+#endregion
+
+# Combine base path and project name
 $projectPath = Join-Path $basePath $ProjectName
 
-# Create folder structure
+#region Create project folder structure
 $folders = @(
     ".venv",
-    "data\raw",
-    "data\processed",
-    "data\external",
-    "docs",
-    "notebooks",
-    "src",
-    "reports\figures",
-    "reports\powerbi_dashboard"
+    "data\raw", "data\processed", "data\external",
+    "docs", "notebooks", "src",
+    "outputs\figures", "outputs\powerbi_dashboard"
 )
 
 foreach ($folder in $folders) {
+    # Ensure each folder exists
     New-Item -Path "$projectPath\$folder" -ItemType Directory -Force | Out-Null
 }
+#endregion
 
-# Create empty files
+#region Create essential files
 $files = @(
     "requirements_devs.txt",
     "requirements_final.txt",
@@ -45,10 +84,12 @@ $files = @(
 )
 
 foreach ($file in $files) {
+    # Ensure each file exists
     New-Item -Path "$projectPath\$file" -ItemType File -Force | Out-Null
 }
+#endregion
 
-# Initialize Git and create .gitignore
+#region Initialize Git and create .gitignore
 Set-Location $projectPath
 git init | Out-Null
 
@@ -59,19 +100,19 @@ __pycache__/
 data/
 *.pbix
 "@ | Out-File -Encoding utf8 .gitignore
+#endregion
 
-# Create and activate virtual environment
+#region Set up Python environment
 python -m venv .venv
 & "$projectPath\.venv\Scripts\Activate.ps1"
 
-# Upgrade pip and install core packages
 python -m pip install --upgrade pip
 pip install ipykernel jupyterlab notebook
 
-# Register Jupyter kernel
 python -m ipykernel install --user --name=".venv" --display-name="Python (.venv)"
+#endregion
 
-# Write and install dependencies
+#region Write and install dependencies
 @"
 pandas>=2.2.3
 numpy>=1.26.4
@@ -85,6 +126,7 @@ xlsxwriter>=3.1.9
 "@ | Out-File -Encoding utf8 "$projectPath\requirements_devs.txt"
 
 pip install -r "$projectPath\requirements_devs.txt"
+#endregion
 
-# Final message
+# Final message to user
 Write-Host "`n🎉 Project '$ProjectName' was successfully created at: $projectPath" -ForegroundColor Green
