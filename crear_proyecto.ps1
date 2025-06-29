@@ -1,12 +1,15 @@
 # =========================
-# DATA PROJECT CREATOR SCRIPT (INTERACTIVE)
+# DATA PROJECT CREATOR SCRIPT (UPDATED WITH NEW CHANGES)
 # =========================
 
 # Function: check if the given path is a critical or prohibited Windows folder
 function Is-ProhibitedPath ($path) {
     $badRoots = @(
-        "C:\", "C:\Windows", "C:\Program Files", "C:\Program Files (x86)",
-        "C:\Users\Public", "C:\Users\Administrator"
+        "C:\\Windows",
+        "C:\\Program Files",
+        "C:\\Program Files (x86)",
+        "C:\\Users\\Public",
+        "C:\\Users\\Administrator"
     )
     foreach ($root in $badRoots) {
         if ($path.ToLower().StartsWith($root.ToLower())) {
@@ -18,7 +21,7 @@ function Is-ProhibitedPath ($path) {
 
 #region Prompt for base path
 do {
-    $basePath = Read-Host "📁 Enter the full path where the new project should be created (e.g. C:\Users\You\Documents\DataProjects)"
+    $basePath = Read-Host "📁 Enter the full path where the new project should be created (e.g. C:\\Users\\You\\Documents\\DataProjects)"
     if ($basePath -match '^(exit|cancel)$') {
         Write-Host "`n❌ Script cancelled by user." -ForegroundColor Red
         exit
@@ -29,10 +32,12 @@ if ($basePath -match '^\s*$') {
     Write-Host "`n❌ Invalid empty path. Cancelling..." -ForegroundColor Red
     exit
 }
+
 if (Is-ProhibitedPath $basePath) {
     Write-Host "`n❌ Prohibited or system-critical path. Cancelling..." -ForegroundColor Red
     exit
 }
+
 if (-not (Test-Path -Path $basePath)) {
     Write-Host "`n❌ Path does not exist. Cancelling..." -ForegroundColor Red
     exit
@@ -53,7 +58,7 @@ if ($ProjectName -match '^\s*$') {
     exit
 }
 if ($ProjectName -notmatch '^[A-Za-z0-9\-_]+$') {
-    Write-Host "`n❌ Project name contains invalid characters. Canceling..." -ForegroundColor Red
+    Write-Host "`n❌ Project name contains invalid characters. Cancelling..." -ForegroundColor Red
     exit
 }
 #endregion
@@ -64,14 +69,13 @@ $projectPath = Join-Path $basePath $ProjectName
 #region Create project folder structure
 $folders = @(
     ".venv",
-    "data\raw", "data\processed", "data\external",
+    "data\\raw", "data\\processed", "data\\external",
     "docs", "notebooks", "src",
-    "outputs\figures", "outputs\powerbi_dashboard"
+    "outputs\\figures", "outputs\\powerbi_dashboard"
 )
 
 foreach ($folder in $folders) {
-    # Ensure each folder exists
-    New-Item -Path "$projectPath\$folder" -ItemType Directory -Force | Out-Null
+    New-Item -Path "$projectPath\\$folder" -ItemType Directory -Force | Out-Null
 }
 #endregion
 
@@ -84,8 +88,7 @@ $files = @(
 )
 
 foreach ($file in $files) {
-    # Ensure each file exists
-    New-Item -Path "$projectPath\$file" -ItemType File -Force | Out-Null
+    New-Item -Path "$projectPath\\$file" -ItemType File -Force | Out-Null
 }
 #endregion
 
@@ -98,13 +101,15 @@ git init | Out-Null
 .venv/
 __pycache__/
 data/
+outputs/powerbi_dashboard/
+requirements_devs.txt
 *.pbix
 "@ | Out-File -Encoding utf8 .gitignore
 #endregion
 
 #region Set up Python environment
 python -m venv .venv
-& "$projectPath\.venv\Scripts\Activate.ps1"
+& ".venv\\Scripts\\Activate.ps1"
 
 python -m pip install --upgrade pip
 pip install ipykernel jupyterlab notebook
@@ -123,10 +128,9 @@ seaborn>=0.13.0
 openpyxl>=3.1.2
 xlrd>=2.0.1
 xlsxwriter>=3.1.9
-"@ | Out-File -Encoding utf8 "$projectPath\requirements_devs.txt"
+"@ | Out-File -Encoding utf8 "$projectPath\\requirements_devs.txt"
 
-pip install -r "$projectPath\requirements_devs.txt"
+pip install -r "$projectPath\\requirements_devs.txt"
 #endregion
 
-# Final message to user
 Write-Host "`n🎉 Project '$ProjectName' was successfully created at: $projectPath" -ForegroundColor Green
