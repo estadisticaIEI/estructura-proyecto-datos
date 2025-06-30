@@ -2,12 +2,12 @@
 
 Este documento explica cómo crear automáticamente la estructura de un proyecto de ciencia de datos usando **PowerShell**, **Git** y **Python** en **Windows 11**.
 
-Incluye un script (`crear_proyecto.ps1`) que puedes **descargar desde el repositorio** y ejecutar en tu máquina para generar toda la estructura del proyecto de forma automática.
+El script (crear_proyecto.ps1) puede ejecutarse directamente desde internet sin necesidad de descarga manual.
 
 ---
 ## 🧰 Requisitos previos
 
-Asegúrate de tener instalado:
+Asegúrate de tener instalado en tu equipo:
 
 - Python 3.11.9 (y agregado al `PATH`)
 - Git para Windows
@@ -15,56 +15,60 @@ Asegúrate de tener instalado:
 - Permisos para ejecutar scripts en PowerShell
 
 ---
-## 🔽 Descargar el script desde GitHub
+## 🛡️ Habilitar ejecución de scripts
+Si es la primera vez que ejecutas scripts descargados de internet, abre PowerShell como administrador y ejecuta:
 
-Descarga el archivo `crear_proyecto.ps1` desde el repositorio oficial:
+```
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
 
-🔗 [https://github.com/estadisticaIEI/estructura-proyecto-datos](https://github.com/estadisticaIEI/estructura-proyecto-datos)
-
-Pasos:
-
-1. Entra al enlace.
-2. Haz clic sobre `crear_proyecto.ps1`.
-3. Luego haz clic en **Raw**.
-4. Clic derecho → **Guardar como...** y guárdalo en cualquier carpeta de tu equipo.
+Esto habilitará la ejecución de scripts solo en la sesión actual (recomendado).
 
 ---
 
-## 🛡️ Habilitar y desbloquear ejecución de scripts
+## 🚀 Ejecución rápida desde internet
+Puedes crear tu proyecto ejecutando este único comando en PowerShell:
 
-### Paso 1: Permitir ejecución de scripts (solo una vez)
-
-Abre PowerShell y ejecuta:
-
-```powershell
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+iex (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/estadisticaIEI/estructura-proyecto-datos/main/crear_proyecto.ps1')
 ```
 
-### Paso 2: Desbloquear archivo descargado
+Esto descargará y ejecutará el script directamente en memoria.
 
-Como el archivo fue descargado de internet, Windows podría bloquearlo. Ejecuta este comando **cambiando la ruta** por la del archivo en tu PC:
+---
 
-```powershell
-Unblock-File -Path "C:\RUTA\A\TU\SCRIPT\crear_proyecto.ps1"
+## ▶️ Uso del script
+El script te pedirá dos datos de forma interactiva:
+
+1️⃣ Ruta base donde crear el proyecto (por ejemplo:
+`C:\Users\TuNombre\Documents\ProyectosCienciaDatos`)
+
+2️⃣ Nombre del proyecto (por ejemplo: `AnalisisVentas2024`)
+
+Ejemplo de ejecución:
+
 ```
+📁 Enter the full path where the new project should be created (e.g. C:\Users\You\Documents\DataProjects)
+> C:\Users\TuNombre\Documents\ProyectosCienciaDatos
+
+📌 Enter the name of your new data project (letters, numbers, '-', '_')
+> MiPrimerProyecto
+```
+
+Cuando finalice, verás un mensaje indicando la ruta completa del proyecto creado.
+
 ---
 
 ## ⚙️ ¿Qué hace el script?
 
 El script `crear_proyecto.ps1` realiza las siguientes acciones:
 
-1. Crea una carpeta con el nombre del proyecto dentro de la ruta base.
-2. Genera una estructura estándar de carpetas para ciencia de datos.
-3. Inicializa un repositorio Git.
-4. Crea un archivo `.gitignore` con rutas típicas a excluir.
-5. Crea un entorno virtual `.venv` con Python.
-6. Activa el entorno virtual.
-7. Actualiza `pip` a la versión más reciente.
-8. Instala dependencias base como JupyterLab.
-9. Registra el kernel `.venv` para Jupyter.
-10. Crea un archivo `requirements_devs.txt` con las librerías necesarias.
-11. Instala las dependencias.
-12. Muestra la lista de paquetes instalados.
+✅ Creación de la estructura estándar de carpetas  
+✅ Inicialización de un repositorio Git  
+✅ Creación de un archivo .gitignore  
+✅ Configuración de un entorno virtual Python (.venv)  
+✅ Instalación de dependencias básicas para ciencia de datos  
+✅ Registro del kernel en JupyterLab
 
 ---
 
@@ -79,44 +83,19 @@ NombreDelProyecto/
 │   ├── processed/                 # Datos limpios
 │   └── external/                  # Datos externos (APIs, GIS, etc.)
 ├── docs/                          # Documentación, informes, papers
-├── notebooks/
-│   └── 01_data_cleaning.ipynb     # Ejemplo de notebook inicial
-├── src/
-│   ├── data_processing.py         # Script de limpieza y procesamiento
-│   └── analysis.py                # Script de análisis y modelado
-├── reports/
+├── notebooks/                     # Jupyter Notebooks
+├── src/                           # Scripts de procesamiento y análisis
+├── outputs/
 │   ├── figures/                   # Gráficos exportados (PNG, SVG)
-│   └── powerbi_dashboard/
-│       └── powerbi_dashboard.pbix # Tablero de Power BI
-├── .gitignore                     # Rutas excluidas del control de versiones
-├── requirements_devs.txt          # Librerías de desarrollo (versiones mínimas)
+│   └── powerbi_dashboard/         # Tableros de Power BI
+├── .gitignore                     # Exclusiones de Git
+├── requirements_devs.txt          # Librerías mínimas para desarrollo
 ├── requirements_final.txt         # Librerías finales (versiones fijadas)
 ├── README.md                      # Este archivo
 └── data_dictionary.md             # Diccionario de datos y variables
 ```
 
 ---
-
-## ▶️ Cómo usar el script
-
-1. Guarda el archivo `crear_proyecto.ps1` en una carpeta de tu elección.
-
-2. **Edita el archivo** y reemplaza la línea de la ruta base con tu ruta personalizada. Por ejemplo:
-
-```powershell
-$basePath = "C:\Users\TuNombre\Documents\ProyectosCienciaDatos"
-```
-
-3. Abre PowerShell y ejecuta el script indicando el nombre del nuevo proyecto:
-
-```powershell
-& "C:\RUTA\A\TU\SCRIPT\crear_proyecto.ps1" -ProjectName "EjemploProyecto"
-```
-
-> ⚠️ El nuevo proyecto se creará en la ruta que configuraste en `$basePath`, no en la ubicación donde guardaste el script.
-
----
-
 ## 📦 Librerías preinstaladas (`requirements_devs.txt`)
 
 El script instala las siguientes dependencias mínimas:
@@ -139,11 +118,16 @@ xlsxwriter>=3.1.9
 
 ## 🧠 Consejos finales
 
-- Al finalizar tu proyecto, puedes guardar las versiones exactas de tus librerías:
+🔹 Si deseas capturar las versiones exactas de tus dependencias antes de entregar el proyecto, ejecuta:
 
-```powershell
+```
 pip freeze > requirements_final.txt
 ```
+
+🔹 Lo anterior garantiza replicabilidad del proyecto para otras personas que puedan estar interesadas en el mismo.
+
+🔹 Puedes reutilizar este script cuantas veces quieras para crear nuevos proyectos en diferentes carpetas.
+
 ---
 
 ## ✅ Resultado esperado
