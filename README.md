@@ -1,99 +1,89 @@
-# 🧪 Guía para la Creación de Proyectos de Ciencia de Datos en Windows 11
+# 🧪 Guía para la Creación de Proyectos de Ciencia de Datos
 
-Este documento explica cómo crear automáticamente la estructura de un proyecto de ciencia de datos usando **PowerShell**, **Git** y **Python** en **Windows 11**.
+Este repositorio contiene dos scripts para generar automáticamente la estructura de un proyecto de ciencia de datos:
 
-El script (crear_proyecto.ps1) puede ejecutarse directamente desde internet sin necesidad de descarga manual.
+1. **PowerShell (Windows nativo)**: `scripts/crear_proyecto.ps1`
+2. **Bash (WSL/Linux/macOS)**: `scripts/create_data_project_bash.sh`
+
+Ambos crean:
+- Estructura estándar de carpetas (`data/raw`, `notebooks`, `src`, etc.)
+- Repositorio Git con `.gitignore`
+- Entorno virtual Python (.venv)
+- Archivos de dependencias (`requirements_devs.txt` y `requirements_final.txt`)
+- Registro de kernel en Jupyter
 
 ---
 ## 🧰 Requisitos previos
 
-Asegúrate de tener instalado en tu equipo:
-
-- Python 3.11.9 (y agregado al `PATH`)
-- Git para Windows
-- PowerShell (incluido por defecto en Windows 11)
-- Permisos para ejecutar scripts en PowerShell
+- **Windows**: PowerShell con permisos para ejecutar scripts.
+- **WSL/Linux/macOS**: Bash, `python3.11` con módulo `venv` (`sudo apt install python3.11-venv` en Ubuntu).
+- **Git** en cualquier plataforma.
+- **Python 3.11.9** (o posterior en la rama 3.11), disponible como `python3.11` o `py -3.11`.
 
 ---
-## 🛡️ Habilitar ejecución de scripts
-Si es la primera vez que ejecutas scripts descargados de internet, abre PowerShell como administrador y ejecuta:
+## 🚀 Ejecución rápida
 
-```
+### PowerShell (Windows nativo)
+Ejecuta sin clonar:
+```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+iex (New-Object Net.WebClient).DownloadString(
+  'https://raw.githubusercontent.com/estadisticaIEI/estructura-proyecto-datos/main/scripts/create_data_project_powershell.ps1'
+)
 ```
 
-Esto habilitará la ejecución de scripts solo en la sesión actual (recomendado).
+### Bash (WSL/Linux/macOS)
+Sin clonar (desde WSL o Linux/macOS):
+```bash
+bash <(curl -fsSL \
+  https://raw.githubusercontent.com/estadisticaIEI/estructura-proyecto-datos/main/scripts/create_data_project_bash.sh
+)
+```
+
+Durante la ejecución, se te pedirá:
+1. Ruta base donde crear el proyecto (p. ej. `C:\Users\TuUsuario\Documents\DataProjects` o `/home/usuario/proyectos`).
+2. Nombre del proyecto (solo letras, números, guiones o guiones bajos).
+3. Para Bash: si deseas instalar dependencias (`y/N`).
 
 ---
+## ⚙️ Uso del script
 
-## 🚀 Ejecución rápida desde internet
-Puedes crear tu proyecto ejecutando este único comando en PowerShell:
+- **PowerShell**: interactivo, crea `.venv\Scripts\activate`, instala deps y registra kernel.
+- **Bash**: detecta WSL vs Linux/macOS; crea `.venv/bin/activate` o `.venv/Scripts/activate`; instala ipykernel; registra kernel.
 
+Al finalizar verás:
 ```
-iex (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/estadisticaIEI/estructura-proyecto-datos/main/crear_proyecto.ps1')
+🎉 Proyecto 'MiProyecto' creado en: /ruta/Completa/MiProyecto
+   • Activa el entorno:
+     - Windows:    .\.venv\Scripts\activate
+     - Linux/MacOS:  source .venv/bin/activate
+   • Para notebooks: elige el kernel.
 ```
-
-Esto descargará y ejecutará el script directamente en memoria.
 
 ---
-
-## ▶️ Uso del script
-El script te pedirá dos datos de forma interactiva:
-
-1️⃣ Ruta base donde crear el proyecto (por ejemplo:
-`C:\Users\TuNombre\Documents\ProyectosCienciaDatos`)
-
-2️⃣ Nombre del proyecto (por ejemplo: `AnalisisVentas2024`)
-
-Ejemplo de ejecución:
+## 📝 Estructura generada
 
 ```
-📁 Enter the full path where the new project should be created (e.g. C:\Users\You\Documents\DataProjects)
-> C:\Users\TuNombre\Documents\ProyectosCienciaDatos
-
-📌 Enter the name of your new data project (letters, numbers, '-', '_')
-> MiPrimerProyecto
-```
-
-Cuando finalice, verás un mensaje indicando la ruta completa del proyecto creado.
-
----
-
-## ⚙️ ¿Qué hace el script?
-
-El script `crear_proyecto.ps1` realiza las siguientes acciones:
-
-✅ Creación de la estructura estándar de carpetas  
-✅ Inicialización de un repositorio Git  
-✅ Creación de un archivo .gitignore  
-✅ Configuración de un entorno virtual Python (.venv)  
-✅ Instalación de dependencias básicas para ciencia de datos  
-✅ Registro del kernel en JupyterLab
-
----
-
-## 📝 Estructura generada del proyecto
-
-```
-NombreDelProyecto/
+MiProyecto/
 │
-├── .venv/                         # Entorno virtual Python
+├── .venv/                        # Entorno virtual Python
 ├── data/
-│   ├── raw/                       # Datos originales
-│   ├── processed/                 # Datos limpios
-│   └── external/                  # Datos externos (APIs, GIS, etc.)
-├── docs/                          # Documentación, informes, papers
-├── notebooks/                     # Jupyter Notebooks
-├── src/                           # Scripts de procesamiento y análisis
+│   ├── raw/
+│   ├── processed/
+│   └── external/
+├── docs/
+├── notebooks/
+├── src/
 ├── outputs/
-│   ├── figures/                   # Gráficos exportados (PNG, SVG)
-│   └── powerbi_dashboard/         # Tableros de Power BI
-├── .gitignore                     # Exclusiones de Git
-├── requirements_devs.txt          # Librerías mínimas para desarrollo
-├── requirements_final.txt         # Librerías finales (versiones fijadas)
-├── README.md                      # Este archivo
-└── data_dictionary.md             # Diccionario de datos y variables
+│   ├── figures/
+│   └── powerbi_dashboard/
+├── .gitignore
+├── requirements_devs.txt
+├── requirements_final.txt
+├── README.md
+└── data_dictionary.md
 ```
+
 
 ---
 ## 📦 Librerías preinstaladas (`requirements_devs.txt`)
@@ -111,9 +101,6 @@ openpyxl>=3.1.2
 xlrd>=2.0.1
 xlsxwriter>=3.1.9
 ```
-
-> Estas versiones son sugeridas y pueden adaptarse según el proyecto. Se instalan desde el archivo `requirements_devs.txt`.
-
 ---
 
 ## 🧠 Consejos finales
@@ -123,13 +110,7 @@ xlsxwriter>=3.1.9
 ```
 pip freeze > requirements_final.txt
 ```
-
-🔹 Lo anterior garantiza replicabilidad del proyecto para otras personas que puedan estar interesadas en el mismo.
-
-🔹 Puedes reutilizar este script cuantas veces quieras para crear nuevos proyectos en diferentes carpetas.
-
 ---
-
 ## ✅ Resultado esperado
 
-Un entorno de trabajo profesional para ciencia de datos, con entorno virtual, notebooks, estructura ordenada de carpetas y dependencias listas para usar.
+Un proyecto listo para trabajar en ciencia de datos, con entorno virtual, estructura ordenada y dependencias mínimas instaladas.
