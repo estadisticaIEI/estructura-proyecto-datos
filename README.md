@@ -26,10 +26,8 @@ Ambos crean:
 ### PowerShell (Windows nativo)
 Ejecuta sin clonar:
 ```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-iex (New-Object Net.WebClient).DownloadString(
-  'https://raw.githubusercontent.com/estadisticaIEI/estructura-proyecto-datos/main/scripts/create_data_project_powershell.ps1'
-)
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass;
+iex (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/estadisticaIEI/estructura-proyecto-datos/main/scripts/create_data_project_powershell.ps1').Content
 ```
 
 ### Bash (WSL/Linux/macOS)
