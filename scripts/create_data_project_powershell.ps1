@@ -1,101 +1,103 @@
 # =========================
-# DATA PROJECT CREATOR SCRIPT (UPDATED WITH NEW CHANGES)
+# DATA PROJECT CREATOR SCRIPT (minimal & robust)
 # =========================
 
-# Function: check if the given path is a critical or prohibited Windows folder
-function Is-ProhibitedPath ($path) {
+# --- Console encoding (avoid garbled chars) ---
+try {
+    chcp.com 65001 | Out-Null
+}
+catch {}
+try {
+    [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+    [Console]::InputEncoding = [System.Text.UTF8Encoding]::new()
+    $OutputEncoding = [System.Text.UTF8Encoding]::new()
+}
+catch {}
+
+# --- Helpers ---
+function Test-ProhibitedPath ($path) {
     $badRoots = @(
-        "C:\\Windows",
-        "C:\\Program Files",
-        "C:\\Program Files (x86)",
-        "C:\\Users\\Public",
-        "C:\\Users\\Administrator"
+        "C:\Windows",
+        "C:\Program Files",
+        "C:\Program Files (x86)",
+        "C:\Users\Public",
+        "C:\Users\Administrator"
     )
     foreach ($root in $badRoots) {
-        if ($path.ToLower().StartsWith($root.ToLower())) {
-            return $true
-        }
+        if ($path.ToLower().StartsWith($root.ToLower())) { return $true }
     }
     return $false
 }
 
-#region Prompt for base path
-do {
-    $basePath = Read-Host "📁 Enter the full path where the new project should be created (e.g. C:\\Users\\You\\Documents\\DataProjects)"
-    if ($basePath -match '^(exit|cancel)$') {
-        Write-Host "`n❌ Script cancelled by user." -ForegroundColor Red
-        exit
-    }
-} while (-not $basePath)
+# --- Prompt: base path ---
+$promptBasePath = @"
+Enter the full path where the new project should be created
+(e.g. C:\Users\You\Documents\DataProjects)
+[Press Enter to cancel / type E to Exit]
+"@
+$basePath = Read-Host $promptBasePath
 
-if ($basePath -match '^\s*$') {
-    Write-Host "`n❌ Invalid empty path. Cancelling..." -ForegroundColor Red
-    exit
+# Cancelación explícita o Enter vacío -> salir
+if ($basePath -match '(?i)^(e|exit|cancel)$' -or $basePath -match '^\s*$') {
+    Write-Host "`nScript cancelled by user." -ForegroundColor Red
+    exit 1
 }
 
-if (Is-ProhibitedPath $basePath) {
-    Write-Host "`n❌ Prohibited or system-critical path. Cancelling..." -ForegroundColor Red
-    exit
+# Validaciones de la ruta
+if (Test-ProhibitedPath $basePath) {
+    Write-Host "`nProhibited or system-critical path. Cancelling..." -ForegroundColor Red
+    exit 1
 }
-
 if (-not (Test-Path -Path $basePath)) {
-    Write-Host "`n❌ Path does not exist. Cancelling..." -ForegroundColor Red
-    exit
+    Write-Host "`nPath does not exist. Cancelling..." -ForegroundColor Red
+    exit 1
 }
-#endregion
 
-#region Prompt for project name
-do {
-    $ProjectName = Read-Host "📌 Enter the name of your new data project (letters, numbers, '-', '_')"
-    if ($ProjectName -match '^(exit|cancel)$') {
-        Write-Host "`n❌ Script cancelled by user." -ForegroundColor Red
-        exit
-    }
-} while (-not $ProjectName)
+# --- Prompt: project name ---
+$promptProject = @"
+Enter the name of your new data project
+(allowed: letters, numbers, '-' or '_')
+[Press Enter to cancel / type E to Exit]
+"@
+$ProjectName = Read-Host $promptProject
 
-if ($ProjectName -match '^\s*$') {
-    Write-Host "`n❌ Invalid empty project name. Cancelling..." -ForegroundColor Red
-    exit
+# Cancelación explícita o Enter vacío -> salir
+if ($ProjectName -match '(?i)^(e|exit|cancel)$' -or $ProjectName -match '^\s*$') {
+    Write-Host "`nScript cancelled by user." -ForegroundColor Red
+    exit 1
 }
+
+# Validaciones del nombre
 if ($ProjectName -notmatch '^[A-Za-z0-9\-_]+$') {
-    Write-Host "`n❌ Project name contains invalid characters. Cancelling..." -ForegroundColor Red
-    exit
+    Write-Host "`nProject name contains invalid characters. Cancelling..." -ForegroundColor Red
+    exit 1
 }
-#endregion
 
-# Combine base path and project name
+# --- Paths & root folder ---
 $projectPath = Join-Path $basePath $ProjectName
+New-Item -Path $projectPath -ItemType Directory -Force | Out-Null
 
-#region Create project folder structure
+# --- Folders ---
 $folders = @(
     ".venv",
-    "data\\raw", "data\\processed", "data\\external",
+    "data/raw", "data/processed", "data/external",
     "docs", "notebooks", "src",
-    "outputs\\figures", "outputs\\powerbi_dashboard"
+    "outputs/figures", "outputs/powerbi_dashboard"
 )
-
 foreach ($folder in $folders) {
-    New-Item -Path "$projectPath\\$folder" -ItemType Directory -Force | Out-Null
+    New-Item -Path (Join-Path $projectPath $folder) -ItemType Directory -Force | Out-Null
 }
-#endregion
 
-#region Create essential files
-$files = @(
-    "requirements_devs.txt",
-    "requirements_final.txt",
-    "README.md",
-    "data_dictionary.md"
-)
-
+# --- Files ---
+$files = @("requirements_devs.txt", "requirements_final.txt", "README.md", "data_dictionary.md")
 foreach ($file in $files) {
-    New-Item -Path "$projectPath\\$file" -ItemType File -Force | Out-Null
+    $filePath = Join-Path $projectPath $file
+    if (-not (Test-Path $filePath)) { New-Item -Path $filePath -ItemType File -Force | Out-Null }
 }
-#endregion
 
-#region Initialize Git and create .gitignore
+# --- Git & .gitignore ---
 Set-Location $projectPath
 git init | Out-Null
-
 @"
 # .gitignore
 .venv/
@@ -105,19 +107,16 @@ outputs/powerbi_dashboard/
 requirements_devs.txt
 *.pbix
 "@ | Out-File -Encoding utf8 .gitignore
-#endregion
 
-#region Set up Python environment
+# --- Python env & Jupyter kernel ---
 python -m venv .venv
-& ".venv\\Scripts\\Activate.ps1"
+& (Join-Path $projectPath ".venv\Scripts\Activate.ps1")
 
 python -m pip install --upgrade pip
 pip install ipykernel jupyterlab notebook
-
 python -m ipykernel install --user --name=".venv" --display-name="Python (.venv)"
-#endregion
 
-#region Write and install dependencies
+# --- Dependencies (dev) ---
 @"
 pandas>=2.2.3
 numpy>=1.26.4
@@ -128,9 +127,7 @@ seaborn>=0.13.0
 openpyxl>=3.1.2
 xlrd>=2.0.1
 xlsxwriter>=3.1.9
-"@ | Out-File -Encoding utf8 "$projectPath\\requirements_devs.txt"
+"@ | Out-File -Encoding utf8 (Join-Path $projectPath "requirements_devs.txt")
+pip install -r (Join-Path $projectPath "requirements_devs.txt")
 
-pip install -r "$projectPath\\requirements_devs.txt"
-#endregion
-
-Write-Host "`n🎉 Project '$ProjectName' was successfully created at: $projectPath" -ForegroundColor Green
+Write-Host "`nProject '$ProjectName' was successfully created at: $projectPath" -ForegroundColor Green
