@@ -35,6 +35,14 @@ iex (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com
 
 Esto descargará y ejecutará el script directamente en memoria.
 
+## 🖥️ Versión para Bash
+Si trabajas en Linux, macOS o usas WSL en Windows, puedes ejecutar el script `crear_proyecto.sh`:
+
+```bash
+bash <(curl -s https://raw.githubusercontent.com/estadisticaIEI/estructura-proyecto-datos/main/crear_proyecto.sh)
+```
+
+
 ---
 
 ## ▶️ Uso del script
